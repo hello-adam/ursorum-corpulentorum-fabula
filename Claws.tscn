@@ -1,0 +1,28 @@
+[gd_scene load_steps=3 format=3 uid="uid://dnacaybmkngqn"]
+
+[ext_resource type="Texture2D" uid="uid://ci20akkw1lrh7" path="res://assets/pics/paw.png" id="1_65g5m"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_2ogf6"]
+radius = 37.0
+height = 106.0
+
+[node name="Claws" type="StaticBody2D"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-180, 0)
+shape = SubResource("CapsuleShape2D_2ogf6")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(-180, 0)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("1_65g5m")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="."]
+position = Vector2(180, 0)
+shape = SubResource("CapsuleShape2D_2ogf6")
+
+[node name="Sprite2D2" type="Sprite2D" parent="."]
+position = Vector2(180, 0)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("1_65g5m")
+flip_h = true

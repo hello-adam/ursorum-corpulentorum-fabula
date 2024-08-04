@@ -1,0 +1,302 @@
+[gd_scene load_steps=19 format=3 uid="uid://dl6k1fmnn1mnh"]
+
+[ext_resource type="Script" path="res://Game.gd" id="1_tno48"]
+[ext_resource type="Script" path="res://addons/jam_launch/core/JamConnect.gd" id="3_21l01"]
+[ext_resource type="PackedScene" uid="uid://bp045ebtvh6js" path="res://addons/jam_launch/ui/ChatConsole.tscn" id="3_arn8j"]
+[ext_resource type="Texture2D" uid="uid://dqvc2yyt7prk6" path="res://assets/pics/fish2.png" id="3_wgagf"]
+[ext_resource type="Texture2D" uid="uid://cvvw002alup21" path="res://assets/pics/fish3.png" id="4_r37wh"]
+[ext_resource type="Texture2D" uid="uid://uvl72ie2qx1v" path="res://assets/pics/star1.png" id="5_p5ois"]
+[ext_resource type="Texture2D" uid="uid://dpnpyo732ayyh" path="res://assets/pics/fish1.png" id="5_ym1ax"]
+[ext_resource type="AudioStream" uid="uid://b2h5ug1iyiwer" path="res://assets/ursorum-corpulentorum.ogg" id="8_l6xq7"]
+
+[sub_resource type="Gradient" id="Gradient_s8xrl"]
+colors = PackedColorArray(1, 1, 1, 0.215686, 1, 1, 1, 1)
+
+[sub_resource type="Gradient" id="Gradient_xpduu"]
+colors = PackedColorArray(1, 1, 1, 0.254902, 1, 1, 1, 1)
+
+[sub_resource type="Gradient" id="Gradient_3xtt4"]
+colors = PackedColorArray(1, 1, 1, 0.290196, 1, 1, 1, 1)
+
+[sub_resource type="Gradient" id="Gradient_p25p8"]
+offsets = PackedFloat32Array(0, 0.286667, 1)
+colors = PackedColorArray(1, 1, 1, 0.168627, 1, 1, 1, 0.380392, 1, 1, 1, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_vjvbd"]
+font_size = 36
+
+[sub_resource type="LabelSettings" id="LabelSettings_nm4rk"]
+font_size = 36
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_kbc3r"]
+distance = -13.0
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_ms7rl"]
+normal = Vector2(1, 0)
+distance = 2.0
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_h32e0"]
+normal = Vector2(0, 1)
+distance = -72.9829
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_7u3oc"]
+normal = Vector2(-1, 0)
+distance = -17.9784
+
+[node name="Game" type="Node2D"]
+script = ExtResource("1_tno48")
+
+[node name="TitleZone" type="Node2D" parent="."]
+position = Vector2(-2000, 0)
+
+[node name="TitleCam" type="Camera2D" parent="TitleZone"]
+position = Vector2(4, 0)
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="TitleZone"]
+position = Vector2(-529, -485)
+amount = 5
+lifetime = 5.0
+explosiveness = 0.22
+texture = ExtResource("5_ym1ax")
+direction = Vector2(1, 1)
+spread = 90.0
+gravity = Vector2(0, 100)
+initial_velocity_max = 300.0
+angular_velocity_min = -200.0
+angular_velocity_max = 200.0
+scale_amount_min = 0.05
+scale_amount_max = 0.4
+color_ramp = SubResource("Gradient_s8xrl")
+
+[node name="CPUParticles2D2" type="CPUParticles2D" parent="TitleZone"]
+position = Vector2(-114, -483)
+amount = 5
+lifetime = 5.0
+explosiveness = 0.22
+texture = ExtResource("3_wgagf")
+direction = Vector2(1, 1)
+spread = 90.0
+gravity = Vector2(0, 100)
+initial_velocity_max = 300.0
+angular_velocity_min = -200.0
+angular_velocity_max = 200.0
+scale_amount_min = 0.05
+scale_amount_max = 0.3
+color_ramp = SubResource("Gradient_xpduu")
+
+[node name="CPUParticles2D3" type="CPUParticles2D" parent="TitleZone"]
+position = Vector2(137, -483)
+rotation = 3.14159
+amount = 5
+lifetime = 5.0
+explosiveness = 0.22
+texture = ExtResource("4_r37wh")
+direction = Vector2(1, -1)
+spread = 90.0
+gravity = Vector2(0, 100)
+initial_velocity_max = 300.0
+angular_velocity_min = -200.0
+angular_velocity_max = 200.0
+scale_amount_min = 0.05
+scale_amount_max = 0.3
+color_ramp = SubResource("Gradient_3xtt4")
+
+[node name="CPUParticles2D4" type="CPUParticles2D" parent="TitleZone"]
+position = Vector2(518, -483)
+rotation = 3.14159
+amount = 5
+lifetime = 5.0
+explosiveness = 0.22
+texture = ExtResource("5_p5ois")
+direction = Vector2(1, -1)
+gravity = Vector2(0, 100)
+initial_velocity_max = 300.0
+angular_velocity_min = -200.0
+angular_velocity_max = 200.0
+scale_amount_min = 0.3
+color_ramp = SubResource("Gradient_p25p8")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="M" type="MarginContainer" parent="HUD"]
+modulate = Color(1, 1, 1, 0.784314)
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -200.0
+offset_right = 400.0
+grow_vertical = 0
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="HB" type="HBoxContainer" parent="HUD/M"]
+layout_mode = 2
+
+[node name="VB" type="VBoxContainer" parent="HUD/M/HB"]
+layout_mode = 2
+alignment = 2
+
+[node name="Menu" type="MenuButton" parent="HUD/M/HB/VB"]
+layout_mode = 2
+text = "..."
+flat = false
+item_count = 2
+popup/item_0/text = "Leave Game"
+popup/item_0/id = 0
+popup/item_1/text = "Exit to Desktop"
+popup/item_1/id = 1
+
+[node name="Console" type="Button" parent="HUD/M/HB/VB"]
+layout_mode = 2
+focus_mode = 0
+text = ">"
+
+[node name="ChatConsole" parent="HUD/M/HB" instance=ExtResource("3_arn8j")]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TouchControl" type="MarginContainer" parent="HUD"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
+
+[node name="Chomp" type="Button" parent="HUD/TouchControl"]
+custom_minimum_size = Vector2(90, 90)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 8
+text = "Chomp"
+
+[node name="CountDown" type="Label" parent="HUD"]
+visible = false
+offset_left = 1100.0
+offset_top = 60.0
+offset_right = 1142.0
+offset_bottom = 110.0
+text = "10"
+label_settings = SubResource("LabelSettings_vjvbd")
+
+[node name="Score" type="Label" parent="HUD"]
+offset_left = 1029.0
+offset_top = 579.0
+offset_right = 1210.0
+offset_bottom = 659.0
+text = "Score: 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EndTitle" type="Label" parent="HUD"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "The End"
+label_settings = SubResource("LabelSettings_nm4rk")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="JamConnect" type="Node" parent="."]
+script = ExtResource("3_21l01")
+
+[node name="GameTimeLimit" type="Timer" parent="."]
+one_shot = true
+
+[node name="Fishes" type="Node2D" parent="."]
+position = Vector2(621, 342)
+
+[node name="Bears" type="Node2D" parent="."]
+position = Vector2(621, 344)
+
+[node name="PushUp" type="Area2D" parent="."]
+position = Vector2(620, 649)
+monitorable = false
+gravity_space_override = 1
+gravity_point_center = Vector2(0, -1)
+gravity_direction = Vector2(0, -1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PushUp"]
+position = Vector2(15, -70)
+shape = SubResource("WorldBoundaryShape2D_kbc3r")
+
+[node name="PushRight" type="Area2D" parent="."]
+position = Vector2(290, 342)
+monitorable = false
+gravity_space_override = 1
+gravity_point_center = Vector2(1, 0)
+gravity_direction = Vector2(1, 0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PushRight"]
+position = Vector2(68, 12)
+shape = SubResource("WorldBoundaryShape2D_ms7rl")
+
+[node name="PushDown" type="Area2D" parent="."]
+position = Vector2(619, 41)
+monitorable = false
+gravity_space_override = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PushDown"]
+position = Vector2(-4, 158)
+shape = SubResource("WorldBoundaryShape2D_h32e0")
+
+[node name="PushLeft" type="Area2D" parent="."]
+position = Vector2(856, 351)
+monitorable = false
+gravity_space_override = 1
+gravity_point_center = Vector2(-1, 0)
+gravity_direction = Vector2(-1, 0)
+gravity = 450.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PushLeft"]
+position = Vector2(39, -6)
+shape = SubResource("WorldBoundaryShape2D_7u3oc")
+
+[node name="CountIn" type="Timer" parent="."]
+wait_time = 10.0
+one_shot = true
+
+[node name="Phase1" type="Timer" parent="."]
+wait_time = 45.0
+one_shot = true
+
+[node name="Phase2" type="Timer" parent="."]
+wait_time = 120.0
+one_shot = true
+
+[node name="CountDown" type="Timer" parent="."]
+wait_time = 10.0
+one_shot = true
+
+[node name="EndZone" type="Node2D" parent="."]
+position = Vector2(3170, -135)
+
+[node name="EndCam" type="Camera2D" parent="EndZone"]
+position = Vector2(1, -5)
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("8_l6xq7")
+autoplay = true
+
+[connection signal="pressed" from="HUD/M/HB/VB/Console" to="." method="_on_console_pressed"]
+[connection signal="button_down" from="HUD/TouchControl/Chomp" to="." method="_on_jump_button_down"]
+[connection signal="button_up" from="HUD/TouchControl/Chomp" to="." method="_on_jump_button_up"]
+[connection signal="local_player_joining" from="JamConnect" to="." method="_on_jam_connect_local_player_joining"]
+[connection signal="local_player_left" from="JamConnect" to="." method="_on_jam_connect_local_player_left"]
+[connection signal="player_connected" from="JamConnect" to="." method="_on_jam_connect_player_connected"]
+[connection signal="player_disconnected" from="JamConnect" to="." method="_on_jam_connect_player_disconnected"]
+[connection signal="server_post_ready" from="JamConnect" to="." method="_on_jam_connect_server_post_ready"]
+[connection signal="timeout" from="GameTimeLimit" to="." method="_on_game_time_limit_timeout"]
+[connection signal="timeout" from="CountIn" to="." method="_on_count_in_timeout"]
+[connection signal="timeout" from="Phase1" to="." method="_on_phase_1_timeout"]
+[connection signal="timeout" from="Phase2" to="." method="_on_phase_2_timeout"]
+[connection signal="timeout" from="CountDown" to="." method="_on_count_down_timeout"]

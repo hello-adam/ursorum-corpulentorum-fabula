@@ -1,0 +1,31 @@
+[gd_scene load_steps=5 format=3 uid="uid://8ker5ihb2ecd"]
+
+[ext_resource type="Script" path="res://Fish.gd" id="1_tp1w5"]
+[ext_resource type="Texture2D" uid="uid://dpnpyo732ayyh" path="res://assets/pics/fish1.png" id="2_3ow6t"]
+[ext_resource type="Script" path="res://addons/jam_launch/core/JamSync.gd" id="3_sj7ys"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_kanuc"]
+radius = 14.0357
+
+[node name="Fish" type="RigidBody2D" groups=["fish"]]
+mass = 32.62
+script = ExtResource("1_tp1w5")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.15, 0.15)
+texture = ExtResource("2_3ow6t")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." groups=["fish"]]
+shape = SubResource("CircleShape2D_kanuc")
+
+[node name="JamSync" type="Node" parent="."]
+script = ExtResource("3_sj7ys")
+spawn_properties = Array[String](["position", "rotation"])
+sync_properties = Array[String](["position", "rotation"])
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 30.0
+one_shot = true
+autostart = true
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]
