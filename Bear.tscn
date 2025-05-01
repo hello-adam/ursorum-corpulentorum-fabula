@@ -1,10 +1,12 @@
-[gd_scene load_steps=9 format=3 uid="uid://hlqmj8vkjnmi"]
+[gd_scene load_steps=20 format=3 uid="uid://hlqmj8vkjnmi"]
 
-[ext_resource type="Script" path="res://Bear.gd" id="1_1vdut"]
+[ext_resource type="Script" uid="uid://dam3hyppap40c" path="res://Bear.gd" id="1_1vdut"]
 [ext_resource type="Texture2D" uid="uid://c0k5j86oujf4o" path="res://assets/pics/bear-neutral.png" id="2_2acfe"]
 [ext_resource type="Texture2D" uid="uid://c75t64cul70ow" path="res://assets/pics/bear-eating.png" id="3_1hpqs"]
-[ext_resource type="Script" path="res://addons/jam_launch/core/JamSync.gd" id="4_dqrdh"]
+[ext_resource type="Script" uid="uid://bqd65v8wmf45g" path="res://addons/jam_launch/core/JamSync.gd" id="4_dqrdh"]
 [ext_resource type="PackedScene" uid="uid://dnacaybmkngqn" path="res://Claws.tscn" id="5_cdn27"]
+[ext_resource type="Script" uid="uid://dti2k4ydqq7t" path="res://addons/jam_launch/core/JamSyncConfig.gd" id="6_in8bt"]
+[ext_resource type="Script" uid="uid://bt1wlhxj6phhf" path="res://addons/jam_launch/core/JamSyncProperty.gd" id="7_uf847"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_wuhfn"]
 animations = [{
@@ -30,6 +32,58 @@ radius = 81.0062
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_sj8as"]
 radius = 73.0274
+
+[sub_resource type="Resource" id="Resource_ujciq"]
+script = ExtResource("7_uf847")
+path = ":position"
+interval_mult = 1
+sync_mode = 2
+
+[sub_resource type="Resource" id="Resource_rk6mb"]
+script = ExtResource("7_uf847")
+path = ":rotation"
+interval_mult = 1
+sync_mode = 3
+
+[sub_resource type="Resource" id="Resource_i6cub"]
+script = ExtResource("7_uf847")
+path = ":head_position"
+interval_mult = 1
+sync_mode = 2
+
+[sub_resource type="Resource" id="Resource_c0g4j"]
+script = ExtResource("7_uf847")
+path = ":eating"
+interval_mult = 1
+sync_mode = 0
+
+[sub_resource type="Resource" id="Resource_1beqn"]
+script = ExtResource("7_uf847")
+path = ":score"
+interval_mult = 2
+sync_mode = 0
+
+[sub_resource type="Resource" id="Resource_h0dou"]
+script = ExtResource("7_uf847")
+path = ":claws_position"
+interval_mult = 1
+sync_mode = 0
+
+[sub_resource type="Resource" id="Resource_in8bt"]
+script = ExtResource("7_uf847")
+path = ":pid"
+interval_mult = 1
+sync_mode = 1
+
+[sub_resource type="Resource" id="Resource_uf847"]
+script = ExtResource("7_uf847")
+path = ":player"
+interval_mult = 1
+sync_mode = 1
+
+[sub_resource type="Resource" id="Resource_p7pqq"]
+script = ExtResource("6_in8bt")
+sync_properties = Array[ExtResource("7_uf847")]([SubResource("Resource_ujciq"), SubResource("Resource_rk6mb"), SubResource("Resource_i6cub"), SubResource("Resource_c0g4j"), SubResource("Resource_1beqn"), SubResource("Resource_h0dou"), SubResource("Resource_in8bt"), SubResource("Resource_uf847")])
 
 [node name="Bear" type="Node2D"]
 script = ExtResource("1_1vdut")
@@ -79,7 +133,7 @@ position = Vector2(0, 19)
 
 [node name="JamSync" type="Node" parent="."]
 script = ExtResource("4_dqrdh")
-spawn_properties = Array[String](["position", "rotation", "pid", "eating", "player"])
-sync_properties = Array[String](["head_position", "position", "rotation", "eating", "score", "claws_position"])
+sync_config = SubResource("Resource_p7pqq")
+metadata/_custom_type_script = "uid://bqd65v8wmf45g"
 
 [connection signal="body_entered" from="Head/Mouth" to="." method="_on_mouth_body_entered"]

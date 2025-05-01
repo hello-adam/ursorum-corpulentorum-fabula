@@ -110,18 +110,20 @@ static func perform_godot_export(output_base: String, config: BuildConfig, timeo
 	if config.template_name.to_lower().contains("android"):
 		export_arg = "--export-debug"
 	var exit_code
+	
 	if OS.get_name() == "Windows":
-		var ps_check_out := []
-		var ps_check = OS.execute("powershell.exe", ["Get-ExecutionPolicy"], ps_check_out, true)
-		if ps_check == 0 and ps_check_out[0].strip_edges() == "Unrestricted":
-			var timeout_script = ProjectSettings.globalize_path("res://addons/jam_launch/export/run-with-timeout.ps1")
-			exit_code = OS.execute("powershell.exe", ["-file", timeout_script, timeout, godot, "--headless", export_arg, config.template_name, "--path", project_path, output_target], output, true)
-		else:
-			if ps_check != 0:
-				push_warning("powershell.exe failed to execute - export timeout will be ignored")
-			else:
-				push_warning("cannot execute timeout script due to '%s' powershell script execution policy - set 'Set-ExecutionPolicy -Scope CurrentUser unrestricted' in an admin powershell to enable the timeout functionality" % [ps_check_out[0].strip_edges()])
-			exit_code = OS.execute(godot, ["--headless", export_arg, config.template_name, "--path", project_path, output_target], output, true)
+		#var ps_check_out := []
+		#var ps_check = OS.execute("powershell.exe", ["Get-ExecutionPolicy"], ps_check_out, true)
+		#if ps_check == 0 and ps_check_out[0].strip_edges() == "Unrestricted":
+			#printerr("using script ", output_base)
+			#var timeout_script = ProjectSettings.globalize_path("res://addons/jam_launch/export/run-with-timeout.ps1")
+			#exit_code = OS.execute("powershell.exe", ["-file", timeout_script, timeout, godot, "--headless", export_arg, config.template_name, "--path", project_path, output_target], output, true)
+		#else:
+			#if ps_check != 0:
+				#push_warning("powershell.exe failed to execute - export timeout will be ignored")
+			#else:
+				#push_warning("cannot execute timeout script due to '%s' powershell script execution policy - set 'Set-ExecutionPolicy -Scope CurrentUser unrestricted' in an admin powershell to enable the timeout functionality" % [ps_check_out[0].strip_edges()])
+		exit_code = OS.execute(godot, ["--headless", export_arg, config.template_name, "--path", project_path, output_target], output, true)
 	else:
 		var timeout_check = OS.execute("command", ["-v", "timeout"])
 		var gtimeout_check = OS.execute("command", ["-v", "gtimeout"])
@@ -132,10 +134,13 @@ static func perform_godot_export(output_base: String, config: BuildConfig, timeo
 		else:
 			push_warning("Neither the 'timeout' or 'gtimeout' command could be found on this system - ignoring export timout")
 			exit_code = OS.execute(godot, ["--headless", export_arg, config.template_name, "--path", project_path, output_target], output, true)
+	
 	if exit_code != 0:
 		if exit_code == 124:
 			return JamError.err("Export timed out")
 		else:
+			if (output[0].contains("No export template found at the expected path")):
+				printerr("Make sure you have installed the export templates for this version of Godot - you can check for and download the export templates at 'Editor -> Manage Export Templates...' in the editor menu")
 			return JamError.err("Non-zero exit code from export command - %d" % [exit_code])
 	if not (FileAccess.file_exists(output_target) or DirAccess.dir_exists_absolute(output_target)):
 		if (output[0].contains("No export template found at the expected path")):

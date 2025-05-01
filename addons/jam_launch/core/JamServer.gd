@@ -24,11 +24,14 @@ var callback_api: JamCallbackApi
 ## A data API client for persisting project information
 var data_api: JamDataApi
 
-var session_id: String = "unset" :
+var session_id: String = "unset":
 	set(v):
 		session_id = v
 		if callback_api:
 			callback_api.session_id = v
+
+var pre_join_shutdown_timer: Timer = Timer.new()
+var uptime_shutdown_timer: Timer = Timer.new()
 
 var _jc: JamConnect:
 	get:
@@ -41,6 +44,9 @@ func _ready():
 	
 	data_api = JamDataApi.new()
 	add_child(data_api)
+	
+	add_child(pre_join_shutdown_timer)
+	add_child(uptime_shutdown_timer)
 
 func _notification(what):
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
@@ -69,8 +75,19 @@ func server_start(args: Dictionary):
 		var cert: X509Certificate
 		if OS.is_debug_build() or dev_mode:
 			var crypto = Crypto.new()
-			key = crypto.generate_rsa(2048)
-			cert = crypto.generate_self_signed_certificate(key, "CN=localhost")
+			var localkey = await _jc.fetch_dev_localhost_key()
+			if localkey != null:
+				key = CryptoKey.new()
+				key.load_from_string(localkey as String)
+			else:
+				key = crypto.generate_rsa(2048)
+			
+			var localcert = await _jc.fetch_dev_localhost_cert()
+			if localcert != null:
+				cert = X509Certificate.new()
+				cert.load_from_string(localcert as String)
+			else:
+				cert = crypto.generate_self_signed_certificate(key, "CN=localhost")
 		else:
 			print("Setting up certificates for secure websockets...")
 			var extra_downloads := OS.get_environment("EXTRA_DOWNLOAD_URLS")
@@ -136,6 +153,22 @@ func server_start(args: Dictionary):
 			printerr("FATAL: Failed to set READY status in database - %s - aborting..." % res.error_msg)
 			get_tree().quit()
 		_jc.server_post_ready.emit()
+	
+	if _jc.pre_join_timeout_minutes > 0:
+		pre_join_shutdown_timer.start(_jc.pre_join_timeout_minutes * 60)
+		pre_join_shutdown_timer.timeout.connect(_on_pre_join_timeout_shutdown)
+	
+	if _jc.maximum_uptime_minutes > 0:
+		uptime_shutdown_timer.start(_jc.maximum_uptime_minutes * 60)
+		uptime_shutdown_timer.timeout.connect(_on_max_uptime_timeout)
+
+func _on_pre_join_timeout_shutdown():
+	print("shutting down after ", _jc.pre_join_timeout_minutes, " minutes due to pre-join timeout configuration...")
+	shut_down(false)
+
+func _on_max_uptime_timeout():
+	print("shutting down after ", _jc.maximum_uptime_minutes, " minutes due to maximum uptime configuration...")
+	shut_down(true)
 
 ## Authenticates a player by verifying the provided [code]username[/code] and
 ## [code]token[/code] with the Jam Launch callback. In developer mode, a token
@@ -158,6 +191,12 @@ func _auth_callback(peer_id: int, data: PackedByteArray):
 		push_error("Auth failure - peer id %d - %s" % [peer_id, res.error_msg])
 		_jc.m.disconnect_peer(peer_id)
 		return
+	
+	if _jc.maximum_player_count > 0:
+		if peer_usernames.size() >= _jc.maximum_player_count:
+			push_error("Auth failure - peer id %d - maximum player count has been reached" % [peer_id])
+			_jc.m.disconnect_peer(peer_id)
+			return
 	
 	print("Correlating peer %d with username %s" % [peer_id, username])
 	peer_usernames[peer_id] = username
@@ -187,6 +226,9 @@ func _on_peer_connect(peer_id: int):
 		printerr("Unexpected connect without username record - peer_id %d" % peer_id)
 		return
 	
+	if not pre_join_shutdown_timer.is_stopped():
+		pre_join_shutdown_timer.stop()
+	
 	var username = peer_usernames[peer_id]
 	for other in peer_usernames.keys():
 		if peer_usernames[other] != username:
@@ -204,12 +246,12 @@ func _on_peer_disconnect(pid: int):
 		_jc.player_disconnected.emit(pid, username)
 		_jc._send_player_left.rpc(pid, username)
 	
-	if peer_usernames.is_empty():
+	if peer_usernames.is_empty() and _jc.shutdown_when_empty:
 		print("All peers disconnected - shutting down...")
 		shut_down(false)
 
 ## Shuts down the server elegantly
-func shut_down(do_disconnect: bool=true):
+func shut_down(do_disconnect: bool = true):
 	if do_disconnect:
 		for pid in _jc.m.get_authenticating_peers():
 			multiplayer.multiplayer_peer.disconnect_peer(pid, true)
@@ -225,12 +267,12 @@ func _setup_local_dev_keys():
 	
 	session_id = local_keys["session_id"]
 	callback_api.api_url = local_keys["callback_url"] as String
-	var res := callback_api.jwt.set_token(local_keys["callback_key"]as String)
+	var res := callback_api.jwt.set_token(local_keys["callback_key"] as String)
 	if res.errored:
 		printerr("failed to set dev key for callback API - %s" % [res.error])
 		return
 	data_api.api_url = local_keys["data_url"] as String
-	res = data_api.jwt.set_token(local_keys["data_key"]as String)
+	res = data_api.jwt.set_token(local_keys["data_key"] as String)
 	if res.errored:
 		printerr("failed to set dev key for data API - %s" % [res.error])
 		return
@@ -240,12 +282,15 @@ func _setup_local_dev_keys():
 
 func _fetch_local_dev_keys() -> Variant:
 	var peer = StreamPeerTCP.new()
-	peer.connect_to_host("127.0.0.1", 17343)
+	var err := peer.connect_to_host("127.0.0.1", 17343)
+	if err != OK:
+		push_error("failed initial connection to local auth proxy for local server credentials")
+		return null
 	while true:
 		await get_tree().create_timer(0.1).timeout
-		var err := peer.poll()
+		err = peer.poll()
 		if err != OK:
-			push_error("failed to connect to local auth proxy for local server creds")
+			push_error("failed to connect to local auth proxy for local server credentials")
 			return null
 		if peer.get_status() == StreamPeerTCP.STATUS_CONNECTED:
 			break
@@ -255,22 +300,22 @@ func _fetch_local_dev_keys() -> Variant:
 	
 	while true:
 		await get_tree().create_timer(0.1).timeout
-		var err := peer.poll()
+		err = peer.poll()
 		if err != OK:
-			push_error("failed to get response from local auth proxy for server creds")
+			push_error("failed to get response from local auth proxy for server credentials")
 			return null
 		if peer.get_available_bytes() > 0:
 			break
 	
 	var json_response := peer.get_string()
 	
-	if json_response.begins_with("Error:"):
-		push_error("failed to get server creds - %s" % json_response)
+	if json_response.begins_with(JamAuthProxy.ERROR_PREFIX):
+		push_warning("failed to get server credentials - %s" % json_response)
 		return null
 	
 	var result = JSON.parse_string(json_response)
 	if result == null:
-		push_error("failed to parse server creds result - %s" % json_response)
+		push_error("failed to parse server credentials result - %s" % json_response)
 		return null
 	
 	peer.disconnect_from_host()

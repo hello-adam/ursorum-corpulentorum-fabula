@@ -10,7 +10,6 @@ extends JamClientUI
 @onready var errors: Control = $Bottom/ErrorArea/Errors
 @onready var version_info: Label = $Bottom/M/VersionInfo
 
-@onready var gjwt_edit: LineEdit = $CC/M/M/PageStack/GjwtEntry/Entry/Manual/EnterGjwt/GjwtEdit
 @onready var device_auth: DeviceAuthUI = $CC/M/M/PageStack/GjwtEntry/Entry/DeviceAuth
 @onready var manual_auth: Control = $CC/M/M/PageStack/GjwtEntry/Entry/Manual
 @onready var gjwt_entry: Control = $CC/M/M/PageStack/GjwtEntry/Entry
@@ -29,8 +28,12 @@ extends JamClientUI
 
 @onready var host_busy: Control = $CC/M/M/PageStack/HostGame/Busy
 @onready var host_busy_lock: ScopeLocker = $CC/M/M/PageStack/HostGame/HostBusy
-@onready var host_region_select: OptionButton = $CC/M/M/PageStack/HostGame/G/RegionSelect
+@onready var host_region_select: OptionButton = %RegionSelect
+var host_regions: Dictionary = {}
 @onready var host_btn: Button = $CC/M/M/PageStack/HostGame/HB/Host
+
+@onready var guest_auth_ui: VBoxContainer = $CC/M/M/PageStack/GjwtEntry/Entry/Manual/Guest
+@onready var local_launch_ui: VBoxContainer = $CC/M/M/PageStack/GjwtEntry/Entry/Manual/Local
 
 const REFRESH_NORMAL = 4.0
 const REFRESH_FAST = 2.0
@@ -90,8 +93,14 @@ func _ready():
 	if OS.is_debug_build() and OS.get_name() != "Android":
 		dev_tools.get_popup().id_pressed.connect(_on_devtools_pressed)
 		version_info.text += " (debug)"
+		local_launch_ui.visible = true
 	else:
 		dev_tools.visible = false
+		local_launch_ui.visible = false
+	
+	var allow_guests = await client_api.check_guests_allowed()
+	jam_connect.allow_guests = not allow_guests.errored
+	guest_auth_ui.visible = jam_connect.allow_guests
 	
 	device_auth.active_auth.connect(_on_active_device_auth)
 	device_auth.has_token.connect(_set_gjwt)
@@ -109,6 +118,38 @@ func _ready():
 	
 	jam_connect.local_player_joining.connect(_on_joining_game)
 	jam_connect.local_player_left.connect(_on_leaving_game)
+	
+
+var hosting_name_map = {
+	"us-east-1": "Virginia",
+	"us-west-1": "California",
+	"eu-west-2": "London",
+	"eu-central-1": "Frankfurt",
+	"ap-south-1": "Mumbai",
+	"ap-northeast-1": "Tokyo",
+	"sa-east-1": "São Paulo"
+}
+
+func _get_hosting_info():
+	var _lock = %HostInfoLock.get_lock()
+	host_regions = {}
+	host_region_select.clear()
+	
+	var res := await jam_client.api.get_game_provisioner_info()
+	if res.errored:
+		show_error("Failed to get hosting options - " + res.error_msg)
+		return
+	
+	for r in res.data["regions"]:
+		var idx := host_region_select.item_count
+		var txt: String = r
+		if r in hosting_name_map:
+			txt = hosting_name_map[r]
+		host_region_select.add_item(txt)
+		host_region_select.set_item_metadata(idx, r)
+		if r == "us-east-1":
+			host_region_select.select(idx)
+		
 
 func _on_active_device_auth(active: bool):
 	manual_auth.visible = !active
@@ -122,6 +163,7 @@ func _on_gjwt_fetch_busy(busy: bool):
 func _on_gjwt_acquired():
 	pages.show_page_node(home_page, false)
 	logged_in.text = "Logged in as\n%s" % jam_client.jwt.username
+	_get_hosting_info.call_deferred()
 
 var joined_players = {}
 
@@ -213,6 +255,16 @@ func _on_page_stack_tab_changed(_tab):
 		return
 	if pages.get_current_tab_control() != session_page:
 		exit_session()
+	
+	if pages.get_current_tab_control() == join_code_page:
+		get_active_sessions()
+		%ActiveSessionAutoRefresh.start()
+	else:
+		%ActiveSessionAutoRefresh.stop()
+	
+	if pages.get_current_tab_control() == host_page:
+		if len(%HostGameName.text) < 1:
+			%HostGameName.text = "%s's Game" % jam_client.jwt.username
 
 func _on_start_join_pressed():
 	pages.show_page_node(join_code_page)
@@ -221,16 +273,14 @@ func _on_start_host_pressed():
 	pages.show_page_node(host_page)
 
 func _on_host_pressed():
-	var region := "us-east-2"
-	var region_id = host_region_select.get_item_id(host_region_select.selected)
-	if region_id == 0:
-		region = "us-east-2"
-	elif region_id == 1:
-		region = "eu-west-2"
+	var region := "eu-west-2"
+	var region_idx := host_region_select.selected
+	if region_idx >= 0:
+		region = host_region_select.get_item_metadata(region_idx)
 	
 	var _lock = host_busy_lock.get_lock()
 	
-	var res := await client_api.create_game_session(region)
+	var res := await client_api.create_game_session(region, %HostGameName.text, %HostPrivate.button_pressed)
 	if res.errored:
 		show_error(res.error_msg)
 		return
@@ -243,6 +293,7 @@ func _on_host_pressed():
 func _on_host_busy_lock_changed(locked):
 	host_btn.get_parent().visible = not locked
 	host_region_select.get_parent().visible = not locked
+	%HostConfig.visible = not locked
 	host_busy.visible = locked
 	
 	start_host.get_parent().visible = not locked
@@ -332,13 +383,6 @@ func _on_start_game_pressed():
 		show_error("cannot start game without a session that is ready", 5.0)
 		return
 
-func _on_paste_gjwt_pressed():
-	var gjwt := DisplayServer.clipboard_get()
-	_set_gjwt(gjwt)
-
-func _on_submit_gjwt_pressed():
-	_set_gjwt(gjwt_edit.text)
-
 func _set_gjwt(gjwt: String):
 	jam_client.set_gjwt(gjwt)
 	if !OS.is_debug_build() or OS.get_name() == "Android":
@@ -352,3 +396,86 @@ func _on_server_pressed():
 
 func _on_device_auth_errored(msg: String):
 	show_error(msg)
+
+func _on_guest_auth_pressed() -> void:
+	_on_gjwt_fetch_busy(true)
+	
+	var res := await jam_client.api.get_guest_jwt()
+	if res.errored:
+		show_error(res.error_msg)
+	else:
+		jam_client.set_gjwt(res.data["token"] as String)
+	
+	_on_gjwt_fetch_busy.call_deferred(false)
+
+
+func _on_host_info_lock_lock_changed(locked: bool) -> void:
+	start_host.disabled = locked
+
+
+func _on_join_selected_pressed() -> void:
+	if join_busy_lock.is_locked():
+		show_error("cannot trigger join while join is already in progress")
+		return
+	var _lock = join_busy_lock.get_lock()
+	
+	var selected = %ActiveList.get_selected_items()
+	if len(selected) < 1:
+		return
+	var join_code = %ActiveList.get_item_metadata(selected[0])
+	
+	var res := await client_api.join_game_session(join_code)
+	if res.errored:
+		show_error(res.error_msg)
+		return
+	if not await enter_session(res.data["id"] as String, res.data["token"] as String):
+		return
+	join_code_edit.clear()
+
+func _on_active_list_item_selected(_index: int) -> void:
+	%JoinSelected.disabled = len(%ActiveList.get_selected_items()) < 1
+
+func _on_active_list_item_activated(_index: int) -> void:
+	_on_join_selected_pressed()
+
+func _on_active_ref_busy_lock_changed(locked: bool) -> void:
+	%JoinSelected.disabled = locked or len(%ActiveList.get_selected_items()) < 1
+	%ActiveSessionsBusy.visible = locked
+	%ActiveSessions.visible = not locked
+	%ActiveRefresh.disabled = locked
+
+func _on_active_refresh_pressed() -> void:
+	if %ActiveRefBusy.is_locked():
+		show_error("cannot refresh sessions while refresh is already in progress")
+		return
+	get_active_sessions()
+
+func get_active_sessions() -> void:
+	var _lock = %ActiveRefBusy.get_lock()
+	
+	var res = await client_api.get_public_game_sessions()
+	if res.errored:
+		show_error(res.error_msg, 10.0)
+		return
+	
+	var selected_join_code = null
+	var selected_index = null
+	var selected = %ActiveList.get_selected_items()
+	if len(selected) > 0:
+		selected_index = selected[0]
+		selected_join_code = %ActiveList.get_item_metadata(selected_index)
+	%ActiveList.clear()
+	
+	for s in res.sessions:
+		var idx = %ActiveList.add_item(s.name)
+		%ActiveList.set_item_metadata(idx, s.join_code)
+	
+	if selected_join_code:
+		for i in range(0, %ActiveList.item_count):
+			if selected_join_code == %ActiveList.get_item_metadata(i):
+				%ActiveList.select(i)
+				break
+
+
+func _on_active_session_auto_refresh_timeout() -> void:
+	get_active_sessions()

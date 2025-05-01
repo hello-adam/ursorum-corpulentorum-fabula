@@ -6,7 +6,7 @@ extends Node
 ## handles client and server initialization, and provides a session
 ## establishment GUI for clients. It is designed to be placed in a multiplayer
 ## game's main scene and connected to the player joining/leaving functions via
-## the [signal JamConnect.player_verified] and
+## the [signal JamConnect.player_connected] and
 ## [signal JamConnect.player_disconnected] signals.
 ## [br][br]
 ## When a JamConnect node determines that a game is being started as a server
@@ -26,50 +26,86 @@ extends Node
 ##
 
 ## Emitted in clients whenever the server sends a notification message
+@warning_ignore("unused_signal")
 signal log_event(msg: String)
 
 ## Emitted in the server whenever a player connects and authenticates with the server
+@warning_ignore("unused_signal")
 signal player_connected(pid: int, username: String)
 ## Emitted in the server whenever a player disconnects from the server
+@warning_ignore("unused_signal")
 signal player_disconnected(pid: int, username: String)
 
 ## Emitted in the server immediately before a "READY" notification is provided
 ## to Jam Launch - this can be used for configuring things before players join.
+@warning_ignore("unused_signal")
 signal server_pre_ready()
 ## Emitted in the server immediately after a "READY" notification is provided
 ## to Jam Launch
+@warning_ignore("unused_signal")
 signal server_post_ready()
 ## Emitted in the server before shutting down - this can be used for last minute
 ## logging or Data API interactions.
+@warning_ignore("unused_signal")
 signal server_shutting_down()
 
 ## Emitted in the client when it starts trying to connect to the server
+@warning_ignore("unused_signal")
 signal local_player_joining()
 ## Emitted in the client when it has been verified
+@warning_ignore("unused_signal")
 signal local_player_joined()
 ## Emitted in the client when it has been disconnected or fails to connect
+@warning_ignore("unused_signal")
 signal local_player_left()
 
 ## Emitted in clients when a player joins
+@warning_ignore("unused_signal")
 signal player_joined(pid: int, username: String)
 ## Emitted in clients when a player leaves
+@warning_ignore("unused_signal")
 signal player_left(pid: int, username: String)
 
 ## Emitted in clients and server when the game has finished a standard
 ## initialization step. By default, this implies that all pending players have
 ## connected as peers of the host/server
+@warning_ignore("unused_signal")
 signal game_init_finalized()
 
 ## Emitted in clients when they have acquired their Jam Launch API credentials
 ## (e.g. via embedded file, test client API, or user entry)
+@warning_ignore("unused_signal")
 signal gjwt_acquired()
+
+## The amount of time in minutes that the server will wait for players to join.
+## If no players join before the timeout is reached, the server will shut down.
+## [br]
+## A value of [code]0[/code] means that no timeout will be enforced.
+@export_range(0, 120) var pre_join_timeout_minutes: int = 15
+
+## The maximum time that a server is allowed to run before it should shut itself
+## down. This is primarily meant as a convenience/backup in case the server
+## fails to end itself appropriately.
+## [br]
+## A value of [code]0[/code] means that no automatic uptime shutdown will be
+## performed.
+@export_range(0, 60 * 24) var maximum_uptime_minutes: int = 0
+
+## If true, shuts down the server when all players have disconnected.
+@export var shutdown_when_empty: bool = true
+
+## The maximum number of players that can be connected before auth checks will
+## auto-fail for all players trying to connect.
+##
+## A value less than 1 means that no limit is imposed.
+@export var maximum_player_count: int = 0
 
 ## A reference to the child [JamClient] node that will be instantiated when
 ## running as a client
-var client: JamClient
+var client: JamClient = null
 ## A reference to the child [JamServer] node that will be instantiated when
 ## running as a server
-var server: JamServer
+var server: JamServer = null
 
 ## The Jam Launch Game ID of this game (a hyphen-separated concatenation of the
 ## project ID and release ID, e.g. "projectId-releaseId"). Usually derived from
@@ -79,6 +115,12 @@ var server: JamServer
 ## may need to navigate to the project page in the editor plugin to sync it (the
 ## sync happens automatically when the project page is loaded)
 var game_id: String
+
+
+## Whether or not guests are allowed to play this release. This does not need to
+## be enforced by the game in any way - it is mostly provided for UI awareness.
+var allow_guests: bool = false
+
 
 ## The network mode for the client/server interaction as determined by the 
 ## [code]deployment.cfg[/code] file.
@@ -131,6 +173,7 @@ func _init():
 			printerr("FATAL: deployment.cfg does not contain a game id value")
 			get_tree().quit(1)
 			return
+		allow_guests = deployment_info.get_value("game", "allow_guests", false)
 		network_mode = deployment_info.get_value("game", "network_mode", "enet")
 		has_deployment = true
 
@@ -163,22 +206,39 @@ func start_up():
 		elif a.begins_with("--"):
 			args[a.lstrip("--")] = true
 	
+	if "window-c" in args:
+		get_window().move_to_center()
+	
+	if "window-x" in args:
+		get_window().position.x += int(args["window-x"] as String)
+		
+	if "window-y" in args:
+		get_window().position.y += int(args["window-y"] as String)
+	
 	if OS.has_feature("server") or "--server" in OS.get_cmdline_args():
 		server = JamServer.new()
 		add_child(server)
 		await server.server_start(args)
+	elif "local-dev-server" in args:
+		start_as_dev_server()
 	else:
 		client = JamClient.new()
 		client.client_ui = client_ui_scene.instantiate()
 		add_child(client)
 		client.client_start()
+		
+		if "local-dev-client" in args:
+			var delay := float(args.get("local-dev-client-delay", "0.75") as String)
+			await get_tree().create_timer(delay).timeout
+			client.client_session_request("localhost", 7437, "localdev")
 
 ## Converts this JamConnect node from being configured as a client to being
 ## being configured as a server in "dev" mode. Used for simplified local hosting
 ## in debug instances launched from the Godot editor.
 func start_as_dev_server():
-	client.queue_free()
-	client = null
+	if client != null:
+		client.queue_free()
+		client = null
 
 	server = JamServer.new()
 	add_child(server)
@@ -238,3 +298,70 @@ func _send_game_init_finalized():
 @rpc("reliable")
 func notify_players(msg: String):
 	log_event.emit(msg)
+
+
+func fetch_dev_localhost_key() -> Variant:
+	var peer = StreamPeerTCP.new()
+	peer.connect_to_host("127.0.0.1", 17343)
+	while true:
+		await get_tree().create_timer(0.1).timeout
+		var err := peer.poll()
+		if err != OK:
+			push_error("failed to connect to local auth proxy for localhost cert key info - this might result in TLS handshake errors")
+			peer.disconnect_from_host()
+			return null
+		if peer.get_status() == StreamPeerTCP.STATUS_CONNECTED:
+			break
+	
+	peer.put_string("localhostkey")
+	
+	while true:
+		await get_tree().create_timer(0.1).timeout
+		var err := peer.poll()
+		if err != OK:
+			push_error("failed to get response from local auth proxy for localhost cert key")
+			peer.disconnect_from_host()
+			return null
+		if peer.get_available_bytes() > 0:
+			break
+	
+	var response := peer.get_string()
+	
+	if response.begins_with("Error:"):
+		push_error("failed to get localhost cert key - %s" % response)
+		return null
+	
+	return response
+
+func fetch_dev_localhost_cert() -> Variant:
+	var peer = StreamPeerTCP.new()
+	peer.connect_to_host("127.0.0.1", 17343)
+	while true:
+		await get_tree().create_timer(0.1).timeout
+		var err := peer.poll()
+		if err != OK:
+			push_error("failed to connect to local auth proxy for localhost cert - this might result in TLS handshake errors")
+			peer.disconnect_from_host()
+			return null
+		if peer.get_status() == StreamPeerTCP.STATUS_CONNECTED:
+			break
+	
+	peer.put_string("localhostcert")
+	
+	while true:
+		await get_tree().create_timer(0.1).timeout
+		var err := peer.poll()
+		if err != OK:
+			push_error("failed to get response from local auth proxy for localhost cert")
+			peer.disconnect_from_host()
+			return null
+		if peer.get_available_bytes() > 0:
+			break
+	
+	var response := peer.get_string()
+	
+	if response.begins_with("Error:"):
+		push_error("failed to get localhost cert - %s" % response)
+		return null
+	
+	return response

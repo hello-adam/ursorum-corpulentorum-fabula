@@ -58,7 +58,7 @@ func _ready():
 		if OS.is_debug_build() and OS.get_name() != "Android":
 			_setup_test_gjwt()
 		else:
-			push_error("Failed to load GJWT")
+			push_warning("did not load client credentials")
 	else:
 		set_gjwt(gjwt as String)
 
@@ -69,7 +69,7 @@ func _setup_test_gjwt():
 	if gjwt != null:
 		set_gjwt(gjwt as String)
 	else:
-		push_error("Failed to load GJWT")
+		push_warning("failed to load client test credentials")
 
 func set_gjwt(gjwt: String):
 	var gjwtRes = jwt.set_token(gjwt)
@@ -113,8 +113,15 @@ func client_session_request(host: String, port: int, token: String):
 	var peer
 	var err
 	if _jc.network_mode == "websocket":
+		var chain: X509Certificate = null
+		if host == "localhost" and OS.is_debug_build():
+			var localchain = await _jc.fetch_dev_localhost_cert()
+			if localchain != null:
+				chain = X509Certificate.new()
+				chain.load_from_string(localchain as String)
+			
 		peer = WebSocketMultiplayerPeer.new()
-		err = peer.create_client("wss://%s:%d" % [host, port], TLSOptions.client_unsafe())
+		err = peer.create_client("wss://%s:%d" % [host, port], TLSOptions.client_unsafe(chain))
 	else:
 		peer = ENetMultiplayerPeer.new()
 		err = peer.create_client(host, port)
@@ -165,7 +172,7 @@ func _on_auth(peer_id: int, _data: PackedByteArray):
 
 func _on_client_connect():
 	_jc.log_event.emit("Connected to server")
-	#_jc.local_player_joined.emit()
+	_jc.local_player_joined.emit()
 
 func _on_server_disconnect():
 	_jc.log_event.emit("Server disconnected")

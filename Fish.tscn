@@ -1,11 +1,35 @@
-[gd_scene load_steps=5 format=3 uid="uid://8ker5ihb2ecd"]
+[gd_scene load_steps=11 format=3 uid="uid://8ker5ihb2ecd"]
 
-[ext_resource type="Script" path="res://Fish.gd" id="1_tp1w5"]
+[ext_resource type="Script" uid="uid://cdtl8inha4oud" path="res://Fish.gd" id="1_tp1w5"]
 [ext_resource type="Texture2D" uid="uid://dpnpyo732ayyh" path="res://assets/pics/fish1.png" id="2_3ow6t"]
-[ext_resource type="Script" path="res://addons/jam_launch/core/JamSync.gd" id="3_sj7ys"]
+[ext_resource type="Script" uid="uid://bqd65v8wmf45g" path="res://addons/jam_launch/core/JamSync.gd" id="3_sj7ys"]
+[ext_resource type="Script" uid="uid://dti2k4ydqq7t" path="res://addons/jam_launch/core/JamSyncConfig.gd" id="4_v25j4"]
+[ext_resource type="Script" uid="uid://bt1wlhxj6phhf" path="res://addons/jam_launch/core/JamSyncProperty.gd" id="5_t0nqp"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_kanuc"]
 radius = 14.0357
+
+[sub_resource type="Resource" id="Resource_kufgg"]
+script = ExtResource("5_t0nqp")
+path = ":position"
+interval_mult = 6
+sync_mode = 2
+
+[sub_resource type="Resource" id="Resource_pfo6x"]
+script = ExtResource("5_t0nqp")
+path = ":rotation"
+interval_mult = 12
+sync_mode = 3
+
+[sub_resource type="Resource" id="Resource_v25j4"]
+script = ExtResource("5_t0nqp")
+path = ":selected_texture"
+interval_mult = 1
+sync_mode = 1
+
+[sub_resource type="Resource" id="Resource_n2s5s"]
+script = ExtResource("4_v25j4")
+sync_properties = Array[ExtResource("5_t0nqp")]([SubResource("Resource_kufgg"), SubResource("Resource_pfo6x"), SubResource("Resource_v25j4")])
 
 [node name="Fish" type="RigidBody2D" groups=["fish"]]
 mass = 32.62
@@ -18,14 +42,14 @@ texture = ExtResource("2_3ow6t")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." groups=["fish"]]
 shape = SubResource("CircleShape2D_kanuc")
 
-[node name="JamSync" type="Node" parent="."]
-script = ExtResource("3_sj7ys")
-spawn_properties = Array[String](["position", "rotation"])
-sync_properties = Array[String](["position", "rotation"])
-
 [node name="Timer" type="Timer" parent="."]
 wait_time = 30.0
 one_shot = true
 autostart = true
+
+[node name="JamSync" type="Node" parent="."]
+script = ExtResource("3_sj7ys")
+sync_config = SubResource("Resource_n2s5s")
+metadata/_custom_type_script = "uid://bqd65v8wmf45g"
 
 [connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

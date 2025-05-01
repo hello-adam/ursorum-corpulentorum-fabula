@@ -6,8 +6,12 @@ var textures = [
 	preload("res://assets/pics/fish3.png")
 ]
 
+var selected_texture: int = 0:
+	set(v):
+		selected_texture = v % textures.size()
+		$Sprite2D.texture = textures[selected_texture]
+
 func _ready():
-	$Sprite2D.texture = textures.pick_random()
 	if not multiplayer.is_server():
 		set_physics_process(false)
 

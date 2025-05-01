@@ -51,6 +51,7 @@ func _process(delta):
 		f.position = Vector2()
 		f.linear_velocity = Vector2(randfn(150.0, 20.0), 0).rotated(randf_range(0, 2*PI))
 		f.angular_velocity = randfn(0.0, 0.5)
+		f.selected_texture = randi_range(0, f.textures.size() - 1)
 		$Fishes.add_child(f, true)
 	
 	if counting_down:
@@ -135,7 +136,8 @@ func _on_menu_selection(id: int):
 
 func _on_jam_connect_local_player_joining():
 	$HUD.visible = true
-	$HUD/TouchControl.visible = OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios")
+	#$HUD/TouchControl.visible = OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios")
+	reset_end()
 
 func _on_jam_connect_local_player_left():
 	for b in $Bears.get_children():
@@ -144,6 +146,7 @@ func _on_jam_connect_local_player_left():
 		f.queue_free()
 	
 	$HUD.visible = false
+	reset_end()
 	$TitleZone/TitleCam.make_current()
 
 func _on_chomp_button_down():
@@ -260,6 +263,7 @@ func set_end_title(text: String):
 	$HUD/EndTitle.visible = true
 	$HUD/EndTitle.text = text
 
+var winner_bears = []
 
 @rpc
 func add_winner_bear(text: String):
@@ -268,4 +272,13 @@ func add_winner_bear(text: String):
 	w.position = Vector2(randf_range(bounds.x * -1, bounds.x), randf_range(bounds.y * -1, bounds.y))
 	w.msg = text
 	$EndZone.add_child(w, true)
+	winner_bears.append(w)
 	
+
+func reset_end():
+	$HUD/EndTitle.visible = false
+	$HUD/EndTitle.text = ""
+	$HUD/Score.text = ""
+	for w in winner_bears:
+		w.queue_free()
+	winner_bears = []

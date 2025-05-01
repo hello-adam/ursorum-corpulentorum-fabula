@@ -1,7 +1,7 @@
 [gd_scene load_steps=19 format=3 uid="uid://dl6k1fmnn1mnh"]
 
-[ext_resource type="Script" path="res://Game.gd" id="1_tno48"]
-[ext_resource type="Script" path="res://addons/jam_launch/core/JamConnect.gd" id="3_21l01"]
+[ext_resource type="Script" uid="uid://cxcml5pgd2wkp" path="res://Game.gd" id="1_tno48"]
+[ext_resource type="Script" uid="uid://70rlexha38ck" path="res://addons/jam_launch/core/JamConnect.gd" id="3_21l01"]
 [ext_resource type="PackedScene" uid="uid://bp045ebtvh6js" path="res://addons/jam_launch/ui/ChatConsole.tscn" id="3_arn8j"]
 [ext_resource type="Texture2D" uid="uid://dqvc2yyt7prk6" path="res://assets/pics/fish2.png" id="3_wgagf"]
 [ext_resource type="Texture2D" uid="uid://cvvw002alup21" path="res://assets/pics/fish3.png" id="4_r37wh"]
@@ -55,9 +55,9 @@ position = Vector2(4, 0)
 [node name="CPUParticles2D" type="CPUParticles2D" parent="TitleZone"]
 position = Vector2(-529, -485)
 amount = 5
+texture = ExtResource("5_ym1ax")
 lifetime = 5.0
 explosiveness = 0.22
-texture = ExtResource("5_ym1ax")
 direction = Vector2(1, 1)
 spread = 90.0
 gravity = Vector2(0, 100)
@@ -71,9 +71,9 @@ color_ramp = SubResource("Gradient_s8xrl")
 [node name="CPUParticles2D2" type="CPUParticles2D" parent="TitleZone"]
 position = Vector2(-114, -483)
 amount = 5
+texture = ExtResource("3_wgagf")
 lifetime = 5.0
 explosiveness = 0.22
-texture = ExtResource("3_wgagf")
 direction = Vector2(1, 1)
 spread = 90.0
 gravity = Vector2(0, 100)
@@ -88,9 +88,9 @@ color_ramp = SubResource("Gradient_xpduu")
 position = Vector2(137, -483)
 rotation = 3.14159
 amount = 5
+texture = ExtResource("4_r37wh")
 lifetime = 5.0
 explosiveness = 0.22
-texture = ExtResource("4_r37wh")
 direction = Vector2(1, -1)
 spread = 90.0
 gravity = Vector2(0, 100)
@@ -105,9 +105,9 @@ color_ramp = SubResource("Gradient_3xtt4")
 position = Vector2(518, -483)
 rotation = 3.14159
 amount = 5
+texture = ExtResource("5_p5ois")
 lifetime = 5.0
 explosiveness = 0.22
-texture = ExtResource("5_p5ois")
 direction = Vector2(1, -1)
 gravity = Vector2(0, 100)
 initial_velocity_max = 300.0

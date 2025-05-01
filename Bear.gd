@@ -7,6 +7,8 @@ extends Node2D
 
 @onready var torso: Node2D = $Torso
 
+const eat_delta: float = 0.3
+
 var eating: bool = false:
 	set(v):
 		eating = v
@@ -21,8 +23,9 @@ var score_multiplier = 1.0
 var pid: int = 1
 var active: bool = true:
 	set(v):
-		if not v and multiplayer.get_unique_id() == pid:
-			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		active = v
+		#if not v and multiplayer.get_unique_id() == pid:
+			#Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 @rpc
 func set_game_end():
@@ -73,7 +76,7 @@ var claws_position: Vector2:
 
 func _ready():
 	if multiplayer.get_unique_id() == pid:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		#Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		cam.make_current()
 		
 		score_label = get_node("../../HUD/Score")
@@ -87,6 +90,17 @@ var claws_target_x = 0.0
 func _process(delta):
 	if multiplayer.is_server():
 		claws_position = $Claws.position.lerp(Vector2(claws_target_x, (head_position.y / 2.0) + 25), delta * CLAW_SPEED)
+	
+	if multiplayer.get_unique_id() == pid:
+		var joypads = Input.get_connected_joypads()
+		if joypads.size() > 0:
+			var x = Input.get_joy_axis(joypads[0], JOY_AXIS_LEFT_X)
+			if eating:
+				if abs(x) > eat_delta + 0.1:
+					reach_chomp.rpc_id(1)
+			else:
+				if abs(x) < eat_delta - 0.1:
+					set_eating.rpc_id(1)
 
 func _input(event):
 	if multiplayer.get_unique_id() != pid or not active:
@@ -99,17 +113,17 @@ func _input(event):
 				claws_target_x = new_x
 				set_claws_target.rpc_id(1, claws_target_x)
 	
-	if event.is_action_pressed("ui_cancel"):
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	#if event.is_action_pressed("ui_cancel"):
+		#Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func _unhandled_input(event):
 	if multiplayer.get_unique_id() != pid or not active:
 		return
 	
-	if event is InputEventMouseButton:
-		if event.pressed:
-			if Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
-				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	#if event is InputEventMouseButton:
+		#if event.pressed:
+			#if Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
+				#Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	
 	if event.is_action_pressed(&"chomp"):
 		if multiplayer.is_server():

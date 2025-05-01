@@ -4,13 +4,13 @@
 [ext_resource type="Theme" uid="uid://k50541hp21mg" path="res://addons/jam_launch/themes/client_ui/big_theme.tres" id="1_onvdi"]
 [ext_resource type="PackedScene" uid="uid://c5d8u6hwivonk" path="res://addons/jam_launch/ui/pages/PageStack.tscn" id="2_s1vno"]
 [ext_resource type="PackedScene" uid="uid://d1rvdodn3tw7w" path="res://addons/jam_launch/ui/BusyCircle.tscn" id="4_lbmx5"]
-[ext_resource type="FontFile" uid="uid://drcgski530d27" path="res://addons/jam_launch/assets/fonts/Azeret/AzeretMono-Medium.ttf" id="4_uf2si"]
+[ext_resource type="FontFile" uid="uid://cwroqw0v5tl81" path="res://addons/jam_launch/assets/fonts/Azeret/AzeretMono-Medium.ttf" id="4_uf2si"]
 [ext_resource type="PackedScene" uid="uid://jk7hixxc6pu3" path="res://addons/jam_launch/ui/client/DeviceAuthUI.tscn" id="4_vpvew"]
 [ext_resource type="Script" path="res://addons/jam_launch/util/ScopeLocker.gd" id="6_ielux"]
-[ext_resource type="Texture2D" uid="uid://bk2lmycbke4cr" path="res://addons/jam_launch/assets/icons/content_copy.svg" id="7_3gepc"]
-[ext_resource type="Texture2D" uid="uid://bivswta38sedp" path="res://addons/jam_launch/assets/icons/content_paste_go.svg" id="7_gr1xc"]
-[ext_resource type="Texture2D" uid="uid://na8vvk6ggh0k" path="res://addons/jam_launch/assets/icons/arrow_back.svg" id="8_qxrcb"]
-[ext_resource type="Texture2D" uid="uid://tqvfnj22uuq1" path="res://addons/jam_launch/assets/icons/settings.svg" id="9_2myoa"]
+[ext_resource type="Texture2D" uid="uid://0s8t8piwoaix" path="res://addons/jam_launch/assets/icons/content_copy.svg" id="7_3gepc"]
+[ext_resource type="Texture2D" uid="uid://bngi27f78gf5m" path="res://addons/jam_launch/assets/icons/content_paste_go.svg" id="7_gr1xc"]
+[ext_resource type="Texture2D" uid="uid://xgronrdov2w5" path="res://addons/jam_launch/assets/icons/arrow_back.svg" id="8_qxrcb"]
+[ext_resource type="Texture2D" uid="uid://cobvhpq2eahrk" path="res://addons/jam_launch/assets/icons/settings.svg" id="9_2myoa"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_jk1cv"]
 
@@ -52,9 +52,11 @@ theme_override_constants/margin_bottom = 12
 
 [node name="PageStack" parent="CC/M/M" instance=ExtResource("2_s1vno")]
 layout_mode = 2
+current_tab = 0
 
 [node name="GjwtEntry" type="VBoxContainer" parent="CC/M/M/PageStack"]
 layout_mode = 2
+metadata/_tab_index = 0
 
 [node name="Entry" type="VBoxContainer" parent="CC/M/M/PageStack/GjwtEntry"]
 layout_mode = 2
@@ -68,63 +70,43 @@ auth_mode = 0
 [node name="Manual" type="VBoxContainer" parent="CC/M/M/PageStack/GjwtEntry/Entry"]
 layout_mode = 2
 
-[node name="Or" type="Label" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual"]
+[node name="Guest" type="VBoxContainer" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual"]
+visible = false
+layout_mode = 2
+
+[node name="Or" type="Label" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual/Guest"]
 layout_mode = 2
 text = "or"
 horizontal_alignment = 1
 
-[node name="gap" type="Control" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual"]
+[node name="gap" type="Control" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual/Guest"]
 layout_mode = 2
 
-[node name="PasteGjwt" type="Button" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual"]
+[node name="GuestAuth" type="Button" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual/Guest"]
 layout_mode = 2
-text = "Paste Game Token"
-icon = ExtResource("7_gr1xc")
-icon_alignment = 2
+text = "Play as Guest"
 
-[node name="Or2" type="Label" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual"]
-layout_mode = 2
-text = "or enter it below:"
-horizontal_alignment = 1
-
-[node name="EnterGjwt" type="HBoxContainer" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="GjwtEdit" type="LineEdit" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual/EnterGjwt"]
-custom_minimum_size = Vector2(300, 0)
-layout_mode = 2
-theme_override_constants/minimum_character_width = 4
-theme_override_fonts/font = ExtResource("4_uf2si")
-max_length = 4
-
-[node name="SubmitGjwt" type="Button" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual/EnterGjwt"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Submit
-"
-
-[node name="gap2" type="Control" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual"]
+[node name="Local" type="VBoxContainer" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual"]
 layout_mode = 2
 
-[node name="Or3" type="Label" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual"]
+[node name="Or3" type="Label" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual/Local"]
 layout_mode = 2
 text = "or"
 horizontal_alignment = 1
 
-[node name="gap3" type="Control" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual"]
+[node name="gap3" type="Control" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual/Local"]
 layout_mode = 2
 
-[node name="Dev" type="HBoxContainer" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual"]
+[node name="Dev" type="HBoxContainer" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual/Local"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Client" type="Button" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual/Dev"]
+[node name="Client" type="Button" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual/Local/Dev"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Local Client"
 
-[node name="Server" type="Button" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual/Dev"]
+[node name="Server" type="Button" parent="CC/M/M/PageStack/GjwtEntry/Entry/Manual/Local/Dev"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Local Server"
@@ -147,6 +129,7 @@ horizontal_alignment = 1
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 16
+metadata/_tab_index = 1
 
 [node name="VB" type="VBoxContainer" parent="CC/M/M/PageStack/Home"]
 layout_mode = 2
@@ -168,7 +151,6 @@ text = "Dev Tools"
 flat = false
 item_count = 2
 popup/item_0/text = "Host Local"
-popup/item_0/id = 0
 popup/item_1/text = "Join Local"
 popup/item_1/id = 1
 
@@ -203,10 +185,15 @@ layout_mode = 2
 text = "Creating Session..."
 horizontal_alignment = 1
 
+[node name="HostInfoLock" type="Node" parent="CC/M/M/PageStack/Home"]
+unique_name_in_owner = true
+script = ExtResource("6_ielux")
+
 [node name="HostGame" type="VBoxContainer" parent="CC/M/M/PageStack"]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 16
+metadata/_tab_index = 2
 
 [node name="Busy" type="VBoxContainer" parent="CC/M/M/PageStack/HostGame"]
 visible = false
@@ -222,6 +209,24 @@ layout_mode = 2
 text = "Creating Session..."
 horizontal_alignment = 1
 
+[node name="HostConfig" type="VBoxContainer" parent="CC/M/M/PageStack/HostGame"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HostGameName" type="LineEdit" parent="CC/M/M/PageStack/HostGame/HostConfig"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Game Name"
+
+[node name="HB" type="HBoxContainer" parent="CC/M/M/PageStack/HostGame/HostConfig"]
+layout_mode = 2
+alignment = 2
+
+[node name="HostPrivate" type="CheckBox" parent="CC/M/M/PageStack/HostGame/HostConfig/HB"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Private"
+
 [node name="G" type="GridContainer" parent="CC/M/M/PageStack/HostGame"]
 layout_mode = 2
 theme_override_constants/h_separation = 8
@@ -233,13 +238,8 @@ layout_mode = 2
 text = "Server Region:"
 
 [node name="RegionSelect" type="OptionButton" parent="CC/M/M/PageStack/HostGame/G"]
+unique_name_in_owner = true
 layout_mode = 2
-item_count = 2
-selected = 0
-popup/item_0/text = "North America - East"
-popup/item_0/id = 0
-popup/item_1/text = "Europe - West"
-popup/item_1/id = 1
 
 [node name="HB" type="HBoxContainer" parent="CC/M/M/PageStack/HostGame"]
 layout_mode = 2
@@ -261,6 +261,7 @@ script = ExtResource("6_ielux")
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 16
+metadata/_tab_index = 3
 
 [node name="Busy" type="VBoxContainer" parent="CC/M/M/PageStack/JoinGameCode"]
 visible = false
@@ -280,17 +281,6 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="PasteCode" type="Button" parent="CC/M/M/PageStack/JoinGameCode/Entry"]
-layout_mode = 2
-text = "Paste Join Code"
-icon = ExtResource("7_gr1xc")
-icon_alignment = 2
-
-[node name="Or" type="Label" parent="CC/M/M/PageStack/JoinGameCode/Entry"]
-layout_mode = 2
-text = "or"
-horizontal_alignment = 1
-
 [node name="EnterCode" type="HBoxContainer" parent="CC/M/M/PageStack/JoinGameCode/Entry"]
 layout_mode = 2
 theme_override_constants/separation = 8
@@ -305,12 +295,35 @@ theme_override_constants/minimum_character_width = 4
 theme_override_fonts/font = ExtResource("4_uf2si")
 max_length = 4
 
+[node name="PasteCode" type="Button" parent="CC/M/M/PageStack/JoinGameCode/Entry/EnterCode"]
+layout_mode = 2
+icon = ExtResource("7_gr1xc")
+icon_alignment = 2
+
 [node name="JoinWithCode" type="Button" parent="CC/M/M/PageStack/JoinGameCode/Entry/EnterCode"]
 layout_mode = 2
 size_flags_horizontal = 3
 disabled = true
 text = "Join
 "
+
+[node name="ActiveSessionsBusy" parent="CC/M/M/PageStack/JoinGameCode/Entry" instance=ExtResource("4_lbmx5")]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 250)
+layout_mode = 2
+padding_ratio = 0.3
+
+[node name="ActiveSessions" type="ScrollContainer" parent="CC/M/M/PageStack/JoinGameCode/Entry"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 250)
+layout_mode = 2
+
+[node name="ActiveList" type="ItemList" parent="CC/M/M/PageStack/JoinGameCode/Entry/ActiveSessions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 
 [node name="Misc" type="HBoxContainer" parent="CC/M/M/PageStack/JoinGameCode/Entry"]
 layout_mode = 2
@@ -320,12 +333,37 @@ theme_override_constants/separation = 8
 layout_mode = 2
 icon = ExtResource("8_qxrcb")
 
+[node name="Container" type="MarginContainer" parent="CC/M/M/PageStack/JoinGameCode/Entry/Misc"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ActiveRefresh" type="Button" parent="CC/M/M/PageStack/JoinGameCode/Entry/Misc"]
+unique_name_in_owner = true
+layout_mode = 2
+disabled = true
+text = "Refresh"
+
+[node name="JoinSelected" type="Button" parent="CC/M/M/PageStack/JoinGameCode/Entry/Misc"]
+unique_name_in_owner = true
+layout_mode = 2
+disabled = true
+text = "Join"
+
 [node name="JoinBusy" type="Node" parent="CC/M/M/PageStack/JoinGameCode"]
 script = ExtResource("6_ielux")
+
+[node name="ActiveRefBusy" type="Node" parent="CC/M/M/PageStack/JoinGameCode"]
+unique_name_in_owner = true
+script = ExtResource("6_ielux")
+
+[node name="ActiveSessionAutoRefresh" type="Timer" parent="CC/M/M/PageStack/JoinGameCode"]
+unique_name_in_owner = true
+wait_time = 10.0
 
 [node name="Session" type="MarginContainer" parent="CC/M/M/PageStack"]
 visible = false
 layout_mode = 2
+metadata/_tab_index = 4
 
 [node name="SessionRefresh" type="Timer" parent="CC/M/M/PageStack/Session"]
 one_shot = true
@@ -451,21 +489,27 @@ theme_override_font_sizes/font_size = 16
 
 [connection signal="tab_changed" from="CC/M/M/PageStack" to="." method="_on_page_stack_tab_changed"]
 [connection signal="errored" from="CC/M/M/PageStack/GjwtEntry/Entry/DeviceAuth" to="." method="_on_device_auth_errored"]
-[connection signal="pressed" from="CC/M/M/PageStack/GjwtEntry/Entry/Manual/PasteGjwt" to="." method="_on_paste_gjwt_pressed"]
-[connection signal="pressed" from="CC/M/M/PageStack/GjwtEntry/Entry/Manual/EnterGjwt/SubmitGjwt" to="." method="_on_submit_gjwt_pressed"]
-[connection signal="pressed" from="CC/M/M/PageStack/GjwtEntry/Entry/Manual/Dev/Client" to="." method="_on_client_pressed"]
-[connection signal="pressed" from="CC/M/M/PageStack/GjwtEntry/Entry/Manual/Dev/Server" to="." method="_on_server_pressed"]
+[connection signal="pressed" from="CC/M/M/PageStack/GjwtEntry/Entry/Manual/Guest/GuestAuth" to="." method="_on_guest_auth_pressed"]
+[connection signal="pressed" from="CC/M/M/PageStack/GjwtEntry/Entry/Manual/Local/Dev/Client" to="." method="_on_client_pressed"]
+[connection signal="pressed" from="CC/M/M/PageStack/GjwtEntry/Entry/Manual/Local/Dev/Server" to="." method="_on_server_pressed"]
 [connection signal="pressed" from="CC/M/M/PageStack/Home/VB/StartJoin" to="." method="_on_start_join_pressed"]
 [connection signal="pressed" from="CC/M/M/PageStack/Home/VB/StartHost" to="." method="_on_start_host_pressed"]
+[connection signal="lock_changed" from="CC/M/M/PageStack/Home/HostInfoLock" to="." method="_on_host_info_lock_lock_changed"]
 [connection signal="pressed" from="CC/M/M/PageStack/HostGame/HB/HostBack" to="." method="_on_host_back_pressed"]
 [connection signal="pressed" from="CC/M/M/PageStack/HostGame/HB/Host" to="." method="_on_host_pressed"]
 [connection signal="lock_changed" from="CC/M/M/PageStack/HostGame/HostBusy" to="." method="_on_host_busy_lock_changed"]
-[connection signal="pressed" from="CC/M/M/PageStack/JoinGameCode/Entry/PasteCode" to="." method="_on_paste_code_pressed"]
 [connection signal="text_changed" from="CC/M/M/PageStack/JoinGameCode/Entry/EnterCode/JoinCode" to="." method="_on_join_code_text_changed"]
 [connection signal="text_submitted" from="CC/M/M/PageStack/JoinGameCode/Entry/EnterCode/JoinCode" to="." method="_on_join_code_text_submitted"]
+[connection signal="pressed" from="CC/M/M/PageStack/JoinGameCode/Entry/EnterCode/PasteCode" to="." method="_on_paste_code_pressed"]
 [connection signal="pressed" from="CC/M/M/PageStack/JoinGameCode/Entry/EnterCode/JoinWithCode" to="." method="_on_join_with_code_pressed"]
+[connection signal="item_activated" from="CC/M/M/PageStack/JoinGameCode/Entry/ActiveSessions/ActiveList" to="." method="_on_active_list_item_activated"]
+[connection signal="item_selected" from="CC/M/M/PageStack/JoinGameCode/Entry/ActiveSessions/ActiveList" to="." method="_on_active_list_item_selected"]
 [connection signal="pressed" from="CC/M/M/PageStack/JoinGameCode/Entry/Misc/JoinCodeBack" to="." method="_on_join_code_back_pressed"]
+[connection signal="pressed" from="CC/M/M/PageStack/JoinGameCode/Entry/Misc/ActiveRefresh" to="." method="_on_active_refresh_pressed"]
+[connection signal="pressed" from="CC/M/M/PageStack/JoinGameCode/Entry/Misc/JoinSelected" to="." method="_on_join_selected_pressed"]
 [connection signal="lock_changed" from="CC/M/M/PageStack/JoinGameCode/JoinBusy" to="." method="_on_join_busy_lock_changed"]
+[connection signal="lock_changed" from="CC/M/M/PageStack/JoinGameCode/ActiveRefBusy" to="." method="_on_active_ref_busy_lock_changed"]
+[connection signal="timeout" from="CC/M/M/PageStack/JoinGameCode/ActiveSessionAutoRefresh" to="." method="_on_active_session_auto_refresh_timeout"]
 [connection signal="timeout" from="CC/M/M/PageStack/Session/SessionRefresh" to="." method="_on_session_refresh_timeout"]
 [connection signal="pressed" from="CC/M/M/PageStack/Session/M/VB/JoinInfo/JoinCodeCopy" to="." method="_on_join_code_copy_pressed"]
 [connection signal="pressed" from="CC/M/M/PageStack/Session/M/VB/StartBox/StartGame" to="." method="_on_start_game_pressed"]
