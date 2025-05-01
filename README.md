@@ -9,4 +9,4 @@ illuminate the universe once more.
 This game was made as part of the
 [Jam Launch Test Jam Game Jam](https://itch.io/jam/jam-launch-test-jam).
 
-You can play the game [here](https://app.jamlaunch.com/g/qk977Fsc-07)
+You can play the game [here](https://corpulentorum.jamlaunch.net/)
